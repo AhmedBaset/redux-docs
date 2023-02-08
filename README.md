@@ -1,4 +1,32 @@
+---
+title: Redux simple docs
+author: Ahmed Abdelbaset
+tags: redux, javascript, react, redux-saga, redux-thunk, redux-observable, redux-logger, redux-devtools-extension, redux-persist, redux-form, redux-saga-test-plan, redux-mock-store, redux-actions, redux-act, redux-logic, redux-loop, redux-first-router, redux-first-history, redux-first-router-link, redux-first-router-restore-scro
+---
+
+<style>
+   body {
+      /* background-color: #000a10; */
+      color: white;
+   }
+   h1, h2, h3, h4, h5, h6 {
+      font-weight: bold;
+      color: deepskyblue;
+      margin-top: 2rem;
+   }
+   p {
+      color: white;
+   }
+   p::first-letter {
+      font-weight: bold;
+      color: deepskyblue;
+   }
+</style>
+
 # Redux simple docs:
+
+written by: [Ahmed Abdelbaset](https://github.com/A7med3bdulBaset).
+
 
 # Introduction:
 
@@ -36,7 +64,7 @@ The store has the following responsibilities:
 
 # Learn with examples:
 
-## Simple counter (Vanilla JS):
+## 1. Simple counter (Vanilla JS):
 
 First of all, we need to install redux:
 ```bash
@@ -127,7 +155,7 @@ store.dispatch(incrementBy(5)); // { count: 5 }
 
 ---
 
-## Posts (Vanilla JS):
+## 2. Posts (Vanilla JS):
 
 Install redux:
 
@@ -196,9 +224,11 @@ store.dispatch(getPosts());
 // { posts: [{ id: 1, ...}, { id: 3, ...}]
 ```
 
+---
+
 Let's talk about `combineReducers`:
 
-### combineReducers
+## combineReducers
 
 Combines multiple reducers into a single reducer function. It will call every child reducer, and gather their results into a single state object, whose keys correspond to the keys of the passed reducer functions.
 
@@ -228,4 +258,191 @@ store.dispatch(createUser({ id: 1, name: 'User 1' })) // { posts: [{ id: 1, ... 
 
 ---
 
-## Next
+
+## Middleware
+
+Redux middleware is a way to extend Redux with custom functionality. It provides a third-party extension point between dispatching an action, and the moment it reaches the reducer. 
+
+Middleware is a function that takes an action and decide how to handle it.
+
+There are two types of middleware:
+
+- Third-party middleware
+- Custom middleware
+
+Uses of middleware:
+
+- Handle the action before it reaches the reducer.
+- Dispatch a new action (i.e. create side-effect such as making an API call).
+- Log the action in the console or in redux-dev-extension tool.
+
+### 1. Third party middleware
+
+Let's install `redux-logger`:
+
+```bash
+npm install redux-logger redux
+```
+
+```javascript
+import { createStore, applyMiddleware } from "redux";
+import reduxLogger from "redux-logger";
+const logger = reduxLogger.createLogger();
+
+const store = createStore(reducer, applyMiddleware(logger));
+
+store.subscribe(() => {
+  console.log(store.getState());
+});
+```
+
+Let's Dispatch an action to see the console:
+
+```javascript
+store.dispatch({type: 'INCREMENT'});
+```
+
+The output without logger:
+
+```js
+{ count: 1 }
+```
+The otput with logger:
+
+```js
+prev state { count: 0 }
+action { type: 'INCREMENT' }
+next state { count: 1 }
+```
+
+### 2. Custom middleware
+
+Let's create a custom middleware:
+
+```javascript
+const customLogger = (store) => {
+	return (next) => {
+		return (action) => {
+			console.log(`==> Previous State: ${JSON.stringify(store.getState())}`);
+			console.log(`==> Action: ${JSON.stringify(action)}`);
+			next(action);
+			console.log(`==> Next State: ${JSON.stringify(store.getState())}`);
+		}
+	}
+}
+const store = createStore(reducer, applyMiddleware(customLogger));
+```
+
+Let's Dispatch an action to see the console:
+
+```javascript
+store.dispatch({type: 'INCREMENT'});
+```
+
+The output without the custom logger:
+
+```js
+{ count: 1 }
+```
+The otput with the custom logger:
+
+```js
+==> Previous State: {"count":0}
+==> Action: {"type":"INCREMENT"}
+==> Next State: {"count":1}
+```
+
+## Redux Thunk
+
+`redux-thunk` is a middleware that allows you to write async actions.
+`redux-thunk` is a function (action creator) that returns another function instead of an action object.
+It receives the dispatch method as an argument and returns a function that will be called later.
+
+To know the benefits of `redux-thunk`, let's imagine we are fetching data from an API. If we don't use `redux-thunk`, when dispatch an action like `getData` to the store. The store will call the `reducer` to handle the action. But, the API response take some time to return. So, the reducer will return empty data. The store and the UI will be updated with empty data. 
+
+But `redux-thunk` will prevent call the reducer until the API response is returned. So, the store and the UI will be updated with the data from the API response.
+
+## 3. Api Posts (Vanilla JS):
+
+### Redux with Async Actions
+
+If we are building app that uses an API. The API response maybe take some time to return. We can't just dispatch an action and expect the store to be updated immediately. We need to wait for the API response to return before we can update the store. If we dispatch an action and the API response is slow, the store will be updated with the old data or empty data.
+
+So, Let's install dependencies:
+
+```bash
+npm install redux redux-thunk axios
+```
+
+```javascript
+import axios from "axios";
+
+// TODO: Initial State
+const initialState = {
+	posts: [],
+	loading: false,
+	error: ""
+};
+
+// TODO: Actions
+const fetchingStarted = () => ({ type: "FETCHING_STARTED" });
+const fetchingSuccessed = (posts) => ({ type: "FETCHING_SUCCESS", payload: posts });
+const fetchingFailured = (error) => ({ type: "FETCHING_FAILURE", payload: error });
+
+//* Thunk Action that handle all actions
+const fetchData = () => {
+	return async (dispatch) => {
+		// TODO: Start Fetching
+		dispatch(fetchingStarted());
+
+		// TODO: Fetch Data
+		try {
+			const data = await axios.get("https://jsonplaceholder.typicode.com/posts");
+			dispatch(fetchingSuccessed(data.data));
+		} catch (error) {
+			// TODO: Handle Error
+			dispatch(fetchingFailured(error));
+		}
+	}
+}
+
+// TODO: Reducer
+const reducer = (state = initialState, action) => {
+	switch (action.type) {
+		case "FETCHING_STARTED":
+			return { ...state, loading: true };
+		case "FETCHING_SUCCESS":
+			return { ...state, loading: false, posts: action.payload };
+		case "FETCHING_FAILURE":
+			return { ...state, loading: false, error: action.payload };
+		default:
+			return state;
+	}
+};
+
+// TODO: Store
+import { createStore, applyMiddleware } from "redux";
+import reduxThunk from "redux-thunk";
+const thunk = reduxThunk.default;
+const store = createStore(reducer, applyMiddleware(thunk));
+
+// TODO: Start Listening
+const unSubscribe = store.subscribe(() => {
+   console.log("Store Changed", store.getState());
+});
+
+// TODO: Dispatch Actions
+store.dispatch(fetchData()); // Thunk Action
+```
+
+The output:
+```js
+Store Changed { posts: [], loading: true, error: '' }
+Store Changed { posts: [
+   {...}, {...}, {...}, ...
+], loading: false, error: '' }
+OR: Store Changed { posts: [], loading: false, error: 'Error: Request failed with status code 404' }
+```
+
+
+# NEXT
