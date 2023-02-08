@@ -1,12 +1,5 @@
----
-title: Redux simple docs
-author: Ahmed Abdelbaset
-tags: redux, javascript, react, redux-saga, redux-thunk, redux-observable, redux-logger, redux-devtools-extension, redux-persist, redux-form, redux-saga-test-plan, redux-mock-store, redux-actions, redux-act, redux-logic, redux-loop, redux-first-router, redux-first-history, redux-first-router-link, redux-first-router-restore-scro
----
-
 <style>
    body {
-      /* background-color: #000a10; */
       color: white;
    }
    h1, h2, h3, h4, h5, h6 {
@@ -442,6 +435,14 @@ Store Changed { posts: [
    {...}, {...}, {...}, ...
 ], loading: false, error: '' }
 OR: Store Changed { posts: [], loading: false, error: 'Error: Request failed with status code 404' }
+```
+If we didn't use `redux-thunk`, the output will be:
+```js
+Store Changed { posts: [], loading: true, error: '' }
+OR:
+Store Changed { posts: [], loading: false, error: 'Error: Request failed with status code 404' }
+OR:
+Store Changed { posts: undefined, loading: false, error: '' }
 ```
 
 
